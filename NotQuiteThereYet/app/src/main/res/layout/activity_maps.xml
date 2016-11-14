@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         tools:context="edu.fsu.cs.mobile.notquitethereyet.MapsActivity"
         android:layout_columnSpan="2"
-        android:layout_height="450dp" />
+        android:layout_height="500dp" />
 
     <EditText
         android:layout_width="wrap_content"

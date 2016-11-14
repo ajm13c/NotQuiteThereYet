@@ -72,13 +72,13 @@ public class LocationService extends Service {
         targetLoc.setLatitude(Lat);
         targetLoc.setLongitude(Lon);
         float distanceInMeters = location.distanceTo(targetLoc);
-        Toast.makeText(getApplicationContext(), distanceInMeters + " away", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(), distanceInMeters + " away", Toast.LENGTH_SHORT).show();
         Log.d("dbg", "DBG: Distance is... " + distanceInMeters);
         for (String number : numbers) {
             if (distanceInMeters <= Distance) {
                 Log.d("dbg", "DBG: Entered Range!");
                 Toast.makeText(getApplicationContext(), "sending text", Toast.LENGTH_SHORT).show();
-                smsManager.sendTextMessage(number, null, "Hey, I'm "+distanceInMeters+" meters out!", null, null);
+                smsManager.sendTextMessage(number, null, "Hey, I'm "+ Math.round(distanceInMeters) +" meters out!", null, null);
                 Sent = true;
             }
         }
