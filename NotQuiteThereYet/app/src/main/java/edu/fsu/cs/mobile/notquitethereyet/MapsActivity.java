@@ -1,12 +1,20 @@
 package edu.fsu.cs.mobile.notquitethereyet;
 
+import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationListener;
@@ -23,6 +31,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.vision.barcode.Barcode;
 
+import static edu.fsu.cs.mobile.notquitethereyet.R.id.RadiusText;
+import static edu.fsu.cs.mobile.notquitethereyet.R.id.SelectButton;
 import static edu.fsu.cs.mobile.notquitethereyet.R.id.map;
 import static edu.fsu.cs.mobile.notquitethereyet.R.styleable.View;
 
@@ -32,7 +42,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Marker marker = null;
     Circle circle = null;
     CircleOptions circleOptions = null;
-    int radius = 1000; /* meters */
+    EditText rad_text;
+    Button cont_button;
+    LatLng dest;
+    int radius = 0; /* meters */
+
 
 
     @Override
@@ -43,12 +57,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
+
+        rad_text = (EditText) findViewById(RadiusText);
+        cont_button = (Button) findViewById(SelectButton);
+        rad_text.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(!rad_text.getText().toString().isEmpty()) {
+                    radius = Integer.parseInt(rad_text.getText().toString());
+                    cont_button.setClickable(true);
+                }
+                else {
+                    radius = 0;
+                    cont_button.setClickable(false);
+                }
+            }
+        });
     }
 
 
     @Override
     public void onMapLongClick(LatLng pnt){
         Toast.makeText(this, "lat="+pnt.latitude + ", lon="+pnt.longitude, Toast.LENGTH_SHORT).show();
+        dest = pnt;
         if (marker != null){
             marker.setPosition(pnt);
             marker.setTitle("lat: " + pnt.latitude + ", Lon: " + pnt.longitude);
@@ -61,12 +102,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (circle == null){
             circleOptions = new CircleOptions()
                     .center(pnt)
-                    .radius(1000)
+                    .radius(radius)
                     .strokeColor(0xff00bf62)
                     .fillColor(0x5000ff00);
             circle = mMap.addCircle(circleOptions);
-        } else
+        } else {
             circle.setCenter(pnt);
+            circle.setRadius(radius);
+        }
         mMap.moveCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
     }
 
@@ -86,5 +129,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setOnMapLongClickListener(this);
+    }
+
+    public void OnClickListener(android.view.View v){
+        Intent Contacts = new Intent(this, StartContact.class);
+        Contacts.putExtra("radius", radius);
+        Contacts.putExtra("lat", dest.latitude);
+        Contacts.putExtra("lng", dest.longitude);
+        startActivity(Contacts);
     }
 }
