@@ -1,11 +1,14 @@
 package edu.fsu.cs.mobile.notquitethereyet;
 
+import android.*;
+import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -57,7 +60,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
-
+        ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.SEND_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_CONTACTS},1);
         rad_text = (EditText) findViewById(RadiusText);
         cont_button = (Button) findViewById(SelectButton);
         rad_text.addTextChangedListener(new TextWatcher() {
