@@ -75,15 +75,14 @@ public class LocationService extends Service {
         Toast.makeText(getApplicationContext(), distanceInMeters + " away", Toast.LENGTH_SHORT).show();
         Log.d("dbg", "DBG: Distance is... " + distanceInMeters);
         for (String number : numbers) {
-            if (distanceInMeters <= Distance && !Sent) {
+            if (distanceInMeters <= Distance) {
                 Log.d("dbg", "DBG: Entered Range!");
                 Toast.makeText(getApplicationContext(), "sending text", Toast.LENGTH_SHORT).show();
                 smsManager.sendTextMessage(number, null, "Hey, I'm "+distanceInMeters+" meters out!", null, null);
                 Sent = true;
-                return true;
             }
         }
-        return false;
+        return Sent;
     }
 
     private void handleActionText(String[] param1, int param2, double param3, double param4) {

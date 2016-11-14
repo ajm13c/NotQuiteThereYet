@@ -4,7 +4,10 @@ import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -39,7 +42,7 @@ import static edu.fsu.cs.mobile.notquitethereyet.R.id.SelectButton;
 import static edu.fsu.cs.mobile.notquitethereyet.R.id.map;
 import static edu.fsu.cs.mobile.notquitethereyet.R.styleable.View;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener{
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap;
     Marker marker = null;
@@ -51,7 +54,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     int radius = 0; /* meters */
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +62,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(map);
         mapFragment.getMapAsync(this);
-        ActivityCompat.requestPermissions(this,new String[]{android.Manifest.permission.SEND_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_CONTACTS},1);
+        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.SEND_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.READ_CONTACTS}, 1);
         rad_text = (EditText) findViewById(RadiusText);
         cont_button = (Button) findViewById(SelectButton);
         rad_text.addTextChangedListener(new TextWatcher() {
@@ -76,11 +78,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void afterTextChanged(Editable s) {
-                if(!rad_text.getText().toString().isEmpty()) {
+                if (!rad_text.getText().toString().isEmpty()) {
                     radius = Integer.parseInt(rad_text.getText().toString());
                     cont_button.setClickable(true);
-                }
-                else {
+                } else {
                     radius = 0;
                     cont_button.setClickable(false);
                 }
@@ -90,19 +91,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     @Override
-    public void onMapLongClick(LatLng pnt){
-        Toast.makeText(this, "lat="+pnt.latitude + ", lon="+pnt.longitude, Toast.LENGTH_SHORT).show();
+    public void onMapLongClick(LatLng pnt) {
+        Toast.makeText(this, "lat=" + pnt.latitude + ", lon=" + pnt.longitude, Toast.LENGTH_SHORT).show();
         dest = pnt;
-        if (marker != null){
+        if (marker != null) {
             marker.setPosition(pnt);
             marker.setTitle("lat: " + pnt.latitude + ", Lon: " + pnt.longitude);
         } else {
             marker = mMap.addMarker(new MarkerOptions()
-            .position(pnt)
-            .title("lat: " + pnt.latitude + ", Lon: " + pnt.longitude));
+                    .position(pnt)
+                    .title("lat: " + pnt.latitude + ", Lon: " + pnt.longitude));
             marker.setPosition(pnt);
         }
-        if (circle == null){
+        if (circle == null) {
             circleOptions = new CircleOptions()
                     .center(pnt)
                     .radius(radius)
@@ -113,7 +114,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             circle.setCenter(pnt);
             circle.setRadius(radius);
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(marker.getPosition()));
     }
 
 
@@ -132,6 +133,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setOnMapLongClickListener(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+        LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+        String provider = lm.getBestProvider(new Criteria(), true);
+        if(provider != null){
+            Location loc = lm.getLastKnownLocation(provider);
+            if(loc != null){
+                LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
+            }
+        }
     }
 
     public void OnClickListener(android.view.View v){
