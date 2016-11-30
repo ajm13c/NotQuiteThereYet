@@ -22,9 +22,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     Marker myLocation = null;
-    LocationManager locationManager;
-    LocationProvider provider;
-    String prov;
+    LocationManager lm;
+    Location loc;
+    String provider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,10 +69,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         mMap.setMyLocationEnabled(true);
         Toast.makeText(this, "Trying to get location", Toast.LENGTH_SHORT).show();
-        LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
-        String provider = lm.getBestProvider(new Criteria(), true);
+        lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+        provider = lm.getBestProvider(new Criteria(), true);
         if(provider != null){
-            Location loc = lm.getLastKnownLocation(provider);
+            loc = lm.getLastKnownLocation(provider);
             if(loc != null){
                 LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
                 myLocation = mMap.addMarker((new MarkerOptions().position(current).title("Here you are")));
@@ -84,6 +84,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapLongClick(LatLng latLng) {
-        myLocation.setPosition(latLng);
+        loc = lm.getLastKnownLocation(provider);
+        myLocation.setPosition(new LatLng(loc.getLatitude(), loc.getLongitude()));
+        //add code to push and pull from database
     }
 }
