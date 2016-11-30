@@ -8,6 +8,7 @@ import android.location.LocationProvider;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -26,6 +27,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationManager lm;
     Location loc;
     String provider;
+    LatLng tallahassee = new LatLng(30.44, -84.29);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +54,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng tallahassee = new LatLng(30.44, -84.29);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tallahassee, 14));
         mMap.setOnMapLongClickListener(this);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
             //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -66,19 +66,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             return;
         }
-        mMap.setMyLocationEnabled(true);
+        //mMap.setMyLocationEnabled(true);
         lm = (LocationManager) getSystemService(LOCATION_SERVICE);
         provider = lm.getBestProvider(new Criteria(), true);
         if(provider != null){
             loc = lm.getLastKnownLocation(provider);
             if(loc != null){
                 LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
-                myLocation = mMap.addMarker((new MarkerOptions()
+                myLocation = mMap.addMarker(new MarkerOptions()
                         .position(current)
                         .title("Self")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
+            }
+            else{
+                myLocation = mMap.addMarker(new MarkerOptions()
+                                            .position(tallahassee)
+                                            .title("Self")
+                                            .snippet("Default value")
+                                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
             }
         }
         mMap.setOnInfoWindowClickListener(this);
@@ -116,13 +123,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .title("self")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
         }
-        //add code to push and pull from database
+        else{
+            Log.i("loc", "Unable to get current location, using past value or default");
+        }
         /*
-        int num_friends = num people in range with 2+ common interests (check db)
-        for(num_friends)
-
-            Marker temp = mMap.addMarker(new MarkerOptions().position(pos_from_db).title(name_from_db).snippet(common_interests))
-
+        add code to push and pull from database
+        int num_results = SQL query to get all users with X+ interests in common
+        float distance;
+        Location target = new Location("");
+        for(int i = 0; i < num_results; i++){
+                set target latitude and longitude according to query results
+                distance = loc.distanceTo(target);
+                if(distance < Some arbitrary constant distance){  //means target has enough common likes and is in range
+                   Marker temp = mMap.addMarker(new MarkerOptions().position(pos_from_db).title(name_from_db).snippet(common_interests))
+                }
+         }
          */
         //Example add marker only to test InfoWindowClick
         LatLng arr[] = new LatLng[2];
@@ -136,12 +151,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onInfoWindowClick(Marker marker) {
         if(marker.getTitle().equals("Self")){
+            Log.i("self", "Clicked self");
             return;
         }
-        Toast.makeText(this, "clicked" + marker.getTitle(), Toast.LENGTH_SHORT).show();
+        else
+            Log.i("other", "Clicked " + marker.getTitle());
         /*
         send request for contact information to clicked marker
-        messenge via fb api?
+        message via fb api?
         */
     }
 }
