@@ -14,6 +14,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -72,7 +73,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             loc = lm.getLastKnownLocation(provider);
             if(loc != null){
                 LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
-                myLocation = mMap.addMarker((new MarkerOptions().position(current).title("Self")));
+                myLocation = mMap.addMarker((new MarkerOptions()
+                        .position(current)
+                        .title("Self")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
             }
@@ -86,7 +90,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //clear all markers from map, then add relevant markers back.
         mMap.clear();
         if(loc != null) {
-            myLocation.setPosition(new LatLng(loc.getLatitude(), loc.getLongitude()));
+            myLocation = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(loc.getLatitude(), loc.getLongitude()))
+                    .title("self")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
         }
         //add code to push and pull from database
         /*
@@ -113,7 +120,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Toast.makeText(this, "clicked" + marker.getTitle(), Toast.LENGTH_SHORT).show();
         /*
         send request for contact information to clicked marker
-        launch service to listen for response?
+        messenge via fb api?
         */
     }
 }
