@@ -83,15 +83,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapLongClick(LatLng latLng) {
         loc = lm.getLastKnownLocation(provider);
-        myLocation.setPosition(new LatLng(loc.getLatitude(), loc.getLongitude()));
+        //clear all markers from map, then add relevant markers back.
+        mMap.clear();
+        if(loc != null) {
+            myLocation.setPosition(new LatLng(loc.getLatitude(), loc.getLongitude()));
+        }
         //add code to push and pull from database
         /*
         int num_friends = num people in range with 2+ common interests (check db)
         for(num_friends)
 
-            Marker temp = mMap.addMarker(new MarkerOptions().position(pos_from_db).title(name_from_db + common_interests))
+            Marker temp = mMap.addMarker(new MarkerOptions().position(pos_from_db).title(name_from_db).snippet(common_interests))
 
          */
+        //Example add marker only to test InfoWindowClick
+        LatLng arr[] = new LatLng[2];
+        arr[0] = latLng;
+        arr[1] = new LatLng(30.44, -84.29);
+        for(int i = 0; i < 2; i++) {
+            Marker temp = mMap.addMarker(new MarkerOptions().position(arr[i]).title("Testing" + i).snippet("info"));
+        }
     }
 
     @Override
@@ -99,11 +110,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(marker.getTitle().equals("Self")){
             return;
         }
-        else{
-            /*
-            send request for contact information to clicked marker
-            launch service to listen for response?
-             */
-        }
+        Toast.makeText(this, "clicked" + marker.getTitle(), Toast.LENGTH_SHORT).show();
+        /*
+        send request for contact information to clicked marker
+        launch service to listen for response?
+        */
     }
 }
