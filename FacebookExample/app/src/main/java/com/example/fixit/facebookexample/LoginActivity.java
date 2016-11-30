@@ -32,6 +32,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.facebook.AccessToken;
@@ -83,6 +84,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mLoginFormView;
     private CallbackManager callbackManager;
     private ProfileTracker profileTracker;
+    private String userID;
+    private Button GetLikes;
+    public Profile mProfile;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,11 +102,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         callbackManager = CallbackManager.Factory.create();
 
+
+
         LoginManager.getInstance().registerCallback(callbackManager,
                 new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
-                        // App code
+                        //GetLikes.setVisibility(View.VISIBLE);
                     }
 
                     @Override
@@ -111,10 +118,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                     @Override
                     public void onError(FacebookException exception) {
-                        // App code   
+                        //GetLikes.setVisibility(View.GONE);
                     }
                 });
         //end callback
+        LoginManager.getInstance().logInWithReadPermissions(
+        this,
+                Arrays.asList("user_likes"));
 
 
         setContentView(R.layout.activity_login);
@@ -151,10 +161,60 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     Profile oldProfile,
                     Profile currentProfile) {
                 // App code
+                if(currentProfile != null){
+                    /* Gets user information if logging in */
                     Log.d("Profile",currentProfile.getId()+" "+currentProfile.getName()+" "+currentProfile.describeContents());
+                    userID = currentProfile.getId();
+                    /* Polling like information */
+                    new GraphRequest(
+                            AccessToken.getCurrentAccessToken(),
+                            "/"+userID+"/likes",
+                            null,
+                            HttpMethod.GET,
+                            new GraphRequest.Callback() {
+                                public void onCompleted(GraphResponse response) {
+                                    if(response != null){
+                                    Log.d("Response","Response Is: "+response.getRawResponse());}
+                                    else{
+                                        Log.d("Error","Empty Response!?");
+                                    }
+                                }
+                            }
+                    ).executeAsync();}
             }
         };
+        /* Gets Button */
+        GetLikes = (Button) findViewById(R.id.getLikes);
+        /* Loads profile if already logged in */
+        mProfile = Profile.getCurrentProfile();
+        if(mProfile != null)
+        {
+            userID = mProfile.getId();
+            //GetLikes.setVisibility(View.VISIBLE);
+        }
 
+        Log.d("Debug:",GetLikes.toString());
+        /*sets onclick listener to poll like information*/
+        GetLikes.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new GraphRequest(
+                        AccessToken.getCurrentAccessToken(),
+                        "/"+userID+"/likes",
+                        null,
+                        HttpMethod.GET,
+                        new GraphRequest.Callback() {
+                            public void onCompleted(GraphResponse response) {
+                                if(response != null){
+                                    Log.d("Response","Response Is: "+response.getRawResponse());}
+                                else{
+                                    Log.d("Error","Empty Response!?");
+                                }
+                            }
+                        }
+                ).executeAsync();
+            }
+        });
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);

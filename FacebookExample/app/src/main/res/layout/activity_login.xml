@@ -19,6 +19,14 @@
         android:layout_marginBottom="8dp"
         android:visibility="gone" />
 
+    <Button
+        android:text="Get Likes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/getLikes"
+        android:elevation="0dp"
+        android:visibility="visible" />
+
     <ScrollView
         android:id="@+id/login_form"
         android:layout_width="match_parent"
