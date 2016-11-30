@@ -1,6 +1,7 @@
 package com.example.fixit.facebookexample;
 
 import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -17,7 +18,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap;
     Marker myLocation = null;
@@ -35,8 +36,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-    }
 
+    }
 
     /**
      * Manipulates the map once available.
@@ -52,9 +53,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         LatLng tallahassee = new LatLng(30.44, -84.29);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tallahassee, 14));
-        myLocation = mMap.addMarker(new MarkerOptions().position(tallahassee).title("You might be here"));
+        mMap.setOnMapLongClickListener(this);
         //TODO: update map to current location and place marker there
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        Toast.makeText(this, "checking permissions", Toast.LENGTH_SHORT).show();
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -62,20 +64,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+
             return;
         }
-        //Not sure why this never runs...
-        Toast.makeText(this, "Trying to get location", Toast.LENGTH_SHORT).show();
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        provider = locationManager.getProvider(locationManager.getAllProviders().get(0));
-        prov = String.valueOf(provider);
-        if(prov != null) {
-            Location location = locationManager.getLastKnownLocation(prov);
-            LatLng current = new LatLng(location.getLatitude(), location.getLongitude());
-            myLocation = mMap.addMarker(new MarkerOptions().position(current).title("Here you are!"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
-        }
-
         mMap.setMyLocationEnabled(true);
+        Toast.makeText(this, "Trying to get location", Toast.LENGTH_SHORT).show();
+        LocationManager lm = (LocationManager) getSystemService(LOCATION_SERVICE);
+        String provider = lm.getBestProvider(new Criteria(), true);
+        if(provider != null){
+            Location loc = lm.getLastKnownLocation(provider);
+            if(loc != null){
+                LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
+                myLocation = mMap.addMarker((new MarkerOptions().position(current).title("Here you are")));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
+            }
+        }
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        myLocation.setPosition(latLng);
     }
 }
