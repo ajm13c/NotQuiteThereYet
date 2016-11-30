@@ -1,5 +1,6 @@
 package com.example.fixit.facebookexample;
 
+import android.*;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
@@ -26,7 +27,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     Marker myLocation = null;
-    LocationManager lm;
+    //LocationManager lm;
     Location loc;
     String provider;
     LatLng tallahassee = new LatLng(30.44, -84.29);
@@ -64,15 +65,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-
             return;
         }
-        //mMap.setMyLocationEnabled(true);
-        lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        myLocation = mMap.addMarker(new MarkerOptions()
+                .position(tallahassee)
+                .title("Self")
+                .snippet("Default")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+        mMap.setMyLocationEnabled(true);
+        LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         provider = lm.getBestProvider(new Criteria(), true);
         if (provider != null) {
             loc = lm.getLastKnownLocation(provider);
             if (loc != null) {
+                mMap.clear();
                 LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
                 myLocation = mMap.addMarker(new MarkerOptions()
                         .position(current)
@@ -80,25 +86,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
-            } else {
-                myLocation = mMap.addMarker(new MarkerOptions()
-                        .position(tallahassee)
-                        .title("Self")
-                        .snippet("Default value")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
             }
         }
+
+
+
         mMap.setOnInfoWindowClickListener(this);
         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
             public void onLocationChanged(Location location) {
                 mMap.clear();
+                loc = location;
+                myLocation = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(loc.getLatitude(), loc.getLongitude()))
+                .title("Self")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                 // Called when a new location is found by the network location provider.
                 //Here we put the code which will A) Update the location of all the other users
                 //B) Will upload your current location to the database
                 /*
                 loc = location
                 add code to push and pull from database
-                int num_results = SQL query to get all users with X+ interests in common
+                //some sort of communication with the database
                 float distance;
                 Location target = new Location("");
                 for(int i = 0; i < num_results; i++){
@@ -126,7 +134,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onInfoWindowClick(Marker marker) {
         if(marker.getTitle().equals("Self")){
             Log.i("self", "Clicked self");
-            
+
         }
         else
             Log.i("other", "Clicked " + marker.getTitle());
