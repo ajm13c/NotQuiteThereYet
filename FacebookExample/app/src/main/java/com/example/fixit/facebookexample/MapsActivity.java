@@ -18,7 +18,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapLongClickListener, GoogleMap.OnInfoWindowClickListener {
 
     private GoogleMap mMap;
     Marker myLocation = null;
@@ -54,8 +54,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLng tallahassee = new LatLng(30.44, -84.29);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tallahassee, 14));
         mMap.setOnMapLongClickListener(this);
-        //TODO: update map to current location and place marker there
-        Toast.makeText(this, "checking permissions", Toast.LENGTH_SHORT).show();
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
@@ -68,18 +66,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return;
         }
         mMap.setMyLocationEnabled(true);
-        Toast.makeText(this, "Trying to get location", Toast.LENGTH_SHORT).show();
         lm = (LocationManager) getSystemService(LOCATION_SERVICE);
         provider = lm.getBestProvider(new Criteria(), true);
         if(provider != null){
             loc = lm.getLastKnownLocation(provider);
             if(loc != null){
                 LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
-                myLocation = mMap.addMarker((new MarkerOptions().position(current).title("Here you are")));
+                myLocation = mMap.addMarker((new MarkerOptions().position(current).title("Self")));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
             }
         }
+        mMap.setOnInfoWindowClickListener(this);
     }
 
     @Override
@@ -87,5 +85,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         loc = lm.getLastKnownLocation(provider);
         myLocation.setPosition(new LatLng(loc.getLatitude(), loc.getLongitude()));
         //add code to push and pull from database
+        /*
+        int num_friends = num people in range with 2+ common interests (check db)
+        for(num_friends)
+
+            Marker temp = mMap.addMarker(new MarkerOptions().position(pos_from_db).title(name_from_db + common_interests))
+
+         */
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        if(marker.getTitle().equals("Self")){
+            return;
+        }
+        else{
+            /*
+            send request for contact information to clicked marker
+            launch service to listen for response?
+             */
+        }
     }
 }
