@@ -108,7 +108,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
-                        //GetLikes.setVisibility(View.VISIBLE);
+                        Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+                        startActivity(intent);
                     }
 
                     @Override
@@ -190,6 +191,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         if(mProfile != null)
         {
             userID = mProfile.getId();
+            Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+            startActivity(intent);
             //GetLikes.setVisibility(View.VISIBLE);
         }
 

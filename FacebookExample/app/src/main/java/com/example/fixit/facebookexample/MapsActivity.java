@@ -87,6 +87,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapLongClick(LatLng latLng) {
         loc = lm.getLastKnownLocation(provider);
+        /*
+        * This is why it crashes ^^^ Use this method:
+        *
+        LocationManager locManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0, new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                //Here we put the code which will A) Update the location of all the other users
+                //B) Will upload your current location to the database
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        });
+        * */
         //clear all markers from map, then add relevant markers back.
         mMap.clear();
         if(loc != null) {
