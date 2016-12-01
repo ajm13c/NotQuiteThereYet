@@ -21,6 +21,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.HttpURLConnection;
+
+import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
     private GoogleMap mMap;
@@ -29,6 +38,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Location loc;
     String provider;
     LatLng tallahassee = new LatLng(30.44, -84.29);
+    String response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,13 +97,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
-
-
         mMap.setOnInfoWindowClickListener(this);
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, new LocationListener() {
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, new LocationListener() {
             public void onLocationChanged(Location location) {
                 mMap.clear();
                 loc = location;
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        URL url = null;
+                        try {
+                            url = new URL("http://98.230.35.254:39048/insert?FBid=1234TEST1234&lat="+loc.getLatitude()+"&lon="+loc.getLongitude());
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
+                        HttpURLConnection urlConnection = null;
+                        try {
+                            urlConnection = (HttpURLConnection) url.openConnection();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                            response = in.toString();
+                            Log.d("Read: ","response -> "+response);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } finally {
+                            urlConnection.disconnect();
+                        }
+                    }
+                });
+                thread.start();
                 myLocation = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(loc.getLatitude(), loc.getLongitude()))
                 .title("Self")
