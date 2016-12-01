@@ -2,6 +2,7 @@ package com.example.fixit.facebookexample;
 
 import android.*;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -39,13 +40,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String provider;
     LatLng tallahassee = new LatLng(30.44, -84.29);
     String response;
+    String myFBID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
-
+        Intent intent = getIntent();
+        Bundle bundle = intent.getExtras();
+        myFBID = bundle.getString("FBID");
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -62,6 +65,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -107,7 +111,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public void run() {
                         URL url = null;
                         try {
-                            url = new URL("http://98.230.35.254:39048/insert?FBid=1234TEST1234&lat="+loc.getLatitude()+"&lon="+loc.getLongitude());
+                            url = new URL("http://98.230.35.254:39048/insert?FBid="+myFBID+"&lat="+loc.getLatitude()+"&lon="+loc.getLongitude());
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }

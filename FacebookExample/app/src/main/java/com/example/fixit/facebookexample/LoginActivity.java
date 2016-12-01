@@ -40,6 +40,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -56,6 +58,8 @@ import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -93,7 +97,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private String userID;
     private Button GetLikes;
     public Profile mProfile;
-
+    public String FBID;
+    public String moreUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +107,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         //facebook api tracking for statistics
         FacebookSdk.sdkInitialize(getApplicationContext());
         AppEventsLogger.activateApp(this);
+        FBID = "ERROR";
         
         //facebook CallBack
         FacebookSdk.sdkInitialize(this.getApplicationContext());
@@ -128,6 +134,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     @Override
                     public void onSuccess(LoginResult loginResult) {
                         Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+                        intent.putExtra("FBID",FBID);
                         startActivity(intent);
                     }
 
@@ -194,7 +201,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             new GraphRequest.Callback() {
                                 public void onCompleted(GraphResponse response) {
                                     if(response != null){
-                                    Log.d("Response","Response Is: "+response.getRawResponse());}
+                                        JSONObject mJSON = response.getJSONObject();
+                                        try {
+                                            moreUrl = mJSON.getString("More");
+                                            Pattern p = Pattern.compile("access_token=([^&]*)");
+                                            MatchResult temp = p.matcher(moreUrl);
+                                            if (temp.groupCount() < 1) {
+                                                Log.i("Error!","Didn't get access token");
+                                                return;
+                                            }
+                                            FBID = temp.group(0);
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                        Log.d("Response","Response Is: "+response.getRawResponse());
+                                    }
                                     else{
                                         Log.d("Error","Empty Response!?");
                                     }
@@ -211,6 +232,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         {
             userID = mProfile.getId();
             Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+            intent.putExtra("FBID",FBID);
             startActivity(intent);
             //GetLikes.setVisibility(View.VISIBLE);
         }
@@ -328,7 +350,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
             cancel = true;
-        } else if (!isEmailValid(email)) {
+        } else if (!isEmailValid(email)     ) {
             mEmailView.setError(getString(R.string.error_invalid_email));
             focusView = mEmailView;
             cancel = true;
@@ -491,6 +513,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
+                intent.putExtra("FBID",FBID);
                 startActivity(intent);
 //                finish();
             } else {
