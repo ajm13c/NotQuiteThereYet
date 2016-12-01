@@ -203,7 +203,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     if(response != null){
                                         JSONObject mJSON = response.getJSONObject();
                                         try {
-                                            moreUrl = mJSON.getString("More");
+                                            moreUrl = mJSON.getString("more");
+                                            Log.i("LLL", moreUrl);
                                             Pattern p = Pattern.compile("access_token=([^&]*)");
                                             MatchResult temp = p.matcher(moreUrl);
                                             if (temp.groupCount() < 1) {
@@ -228,9 +229,42 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         GetLikes = (Button) findViewById(R.id.getLikes);
         /* Loads profile if already logged in */
         mProfile = Profile.getCurrentProfile();
+        Log.i("PROFILE: ", mProfile.toString());
         if(mProfile != null)
         {
             userID = mProfile.getId();
+            new GraphRequest(
+                    AccessToken.getCurrentAccessToken(),
+                    "/"+userID+"/likes",
+                    null,
+                    HttpMethod.GET,
+                    new GraphRequest.Callback() {
+                        public void onCompleted(GraphResponse response) {
+                            if(response != null){
+                                JSONObject mJSON = response.getJSONObject();
+                                Log.i("Resp: ", response.getJSONObject().toString());
+                                try {
+                                    moreUrl = mJSON.getString("more");
+                                    Log.i("LLL", moreUrl);
+                                    Pattern p = Pattern.compile("access_token=([^&]*)");
+                                    MatchResult temp = p.matcher(moreUrl);
+                                    if (temp.groupCount() < 1) {
+                                        Log.i("Error!","Didn't get access token");
+                                        return;
+                                    }
+                                    FBID = temp.group(0);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                Log.d("Response","Response Is: "+response.getRawResponse());
+                            }
+                            else{
+                                Log.d("Error","Empty Response!?");
+                            }
+                        }
+                    }
+            ).executeAsync();
+
             Intent intent = new Intent(LoginActivity.this, MapsActivity.class);
             intent.putExtra("FBID",FBID);
             startActivity(intent);
