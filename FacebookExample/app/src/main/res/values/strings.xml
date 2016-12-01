@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FacebookExample</string>
+    <string name="app_name">Billboard</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

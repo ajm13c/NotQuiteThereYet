@@ -22,18 +22,25 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 
 import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
-    private GoogleMap mMap;
+    public GoogleMap mMap;
     Marker myLocation = null;
     //LocationManager lm;
     Location loc;
@@ -41,6 +48,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LatLng tallahassee = new LatLng(30.44, -84.29);
     String response;
     String myFBID;
+    ArrayList<mUser> users;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +57,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         myFBID = bundle.getString("FBID");
+        users = new ArrayList<mUser>();
         Log.i("LLLLL", myFBID);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -80,11 +89,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        myLocation = mMap.addMarker(new MarkerOptions()
-                .position(tallahassee)
-                .title("Self")
-                .snippet("Default")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
         mMap.setMyLocationEnabled(true);
         LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         provider = lm.getBestProvider(new Criteria(), true);
@@ -93,10 +97,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (loc != null) {
                 mMap.clear();
                 LatLng current = new LatLng(loc.getLatitude(), loc.getLongitude());
-                myLocation = mMap.addMarker(new MarkerOptions()
-                        .position(current)
-                        .title("Self")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(current));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(current, 14));
             }
@@ -116,16 +116,99 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         } catch (MalformedURLException e) {
                             e.printStackTrace();
                         }
+
                         HttpURLConnection urlConnection = null;
                         try {
                             urlConnection = (HttpURLConnection) url.openConnection();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+
                         try {
-                            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                            response = in.toString();
+                            BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                            response=in.readLine();
                             Log.d("Read: ","response -> "+response);
+                            if(response != null){
+                                try {
+                                    url = new URL("http://98.230.35.254:39048/pollusers?FBid="+myFBID);
+                                } catch (MalformedURLException e) {
+                                    e.printStackTrace();
+                                }
+
+                                urlConnection = null;
+                                try {
+                                    urlConnection = (HttpURLConnection) url.openConnection();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                try {
+                                    BufferedReader in2 = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                                    String response2=in2.readLine();
+                                    Log.d("Read: ","response2 -> "+response2);
+                                    JSONArray jArray = new JSONArray(response2);
+                                    users.clear();
+                                    for(int i=0; i<jArray.length(); i++){
+                                        try{
+                                            JSONObject oneObject = jArray.getJSONObject(i);
+                                            String UserName = oneObject.getString("user_name");
+                                            String InterestName = oneObject.getString("name");
+                                            Double Lat = oneObject.getDouble("lat");
+                                            Double Lon = oneObject.getDouble("lon");
+                                            Integer id = oneObject.getInt("id");
+                                            //If id does not exist
+                                                // Create user at location (lat,lon)
+                                                // With name user_name
+                                                // Add InterestName to user's interests
+                                            //Else
+                                                // Add InterestName to user's interests
+                                            boolean flag = false;
+                                            for(mUser u : users){
+                                                if(id == u.getUid()){
+                                                    u.myInterests.add(InterestName);
+                                                    flag = true;
+                                                    break;
+                                                }
+                                            }
+                                            if(!flag){
+                                                users.add(new mUser(id,UserName,InterestName,Lat,Lon));
+                                            }
+                                        }catch(JSONException e) {
+
+                                        }
+                                    }
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mMap.clear();
+                                            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                                                @Override
+                                                public boolean onMarkerClick(Marker marker) {
+                                                    Intent intent = new Intent(MapsActivity.this,UserDialog.class);
+                                                    intent.putExtra("Name",marker.getTitle());
+                                                    intent.putExtra("Interests",marker.getSnippet());
+                                                    startActivity(intent);
+                                                    return true;
+                                                };
+                                            });
+                                            if(!users.isEmpty()) {
+                                                for (mUser u : users) {
+                                                    Marker m = mMap.addMarker(u.getMarkerOptions());
+
+                                                }
+                                            }
+                                        }
+                                    });
+
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                } finally {
+                                    urlConnection.disconnect();
+                                }
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         } finally {
@@ -134,27 +217,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
                 thread.start();
-                myLocation = mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(loc.getLatitude(), loc.getLongitude()))
-                .title("Self")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-                // Called when a new location is found by the network location provider.
-                //Here we put the code which will A) Update the location of all the other users
-                //B) Will upload your current location to the database
-                /*
-                loc = location
-                add code to push and pull from database
-                //some sort of communication with the database
-                float distance;
-                Location target = new Location("");
-                for(int i = 0; i < num_results; i++){
-                    set target latitude and longitude according to query results
-                    distance = loc.distanceTo(target);
-                    if(distance < Some arbitrary constant distance){  //means target has enough common likes and is in range
-                   Marker temp = mMap.addMarker(new MarkerOptions().position(pos_from_db).title(name_from_db).snippet(common_interests))
-                }
-         }
-        */
             }
 
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -180,5 +242,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         send request for contact information to clicked marker
         message via fb api?
         */
+    }
+}
+
+class mUser{
+    Integer uid;
+    String user_name;
+    ArrayList<String> myInterests = new ArrayList<String>();
+    Double myLat;
+    Double myLon;
+    MarkerOptions m;
+
+    mUser(){
+        uid = 0;
+        user_name = "";
+        myLat = 0.0;
+        myLon = 0.0;
+    }
+
+    mUser(Integer u, String n, String i, Double la, Double lo){
+        uid = u;
+        user_name = n;
+        myInterests.add(i);
+        myLat = la;
+        myLon = lo;
+    }
+
+    void addInterest(String i){
+        myInterests.add(i);
+    }
+
+    int getUid(){
+        return uid;
+    }
+
+    String getInterests(){
+        String CompiledInterests = "";
+        for(String s : myInterests){
+            CompiledInterests += s;
+            CompiledInterests += "\n";
+        }
+        return CompiledInterests;
+    }
+    MarkerOptions getMarkerOptions(){
+        m = new MarkerOptions().position(new LatLng(myLat,myLon)).title(user_name).snippet(getInterests());
+
+        return m;
     }
 }
